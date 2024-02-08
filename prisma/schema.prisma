@@ -1,89 +1,119 @@
 generator client {
-  provider = "prisma-client-js" // Specifies the provider for the Prisma client, in this case, it's JavaScript.
+  provider = "prisma-client-js"
 }
 
-// This section configures the datasource. Datasources in Prisma represent the database type and connection details.
 datasource db {
-  provider = "postgresql" // Specifies the type of database, here it is PostgreSQL.
-  url      = env("DATABASE_URL") // The connection URL, taken from an environment variable for security and flexibility.
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
-// Definition of the User model. This model represents a user in the system.
 model User {
-  id            Int             @id @default(autoincrement()) // Unique identifier, auto-increments.
-  uuid          String          @unique // A unique string identifier, often used for secure identification.
-  password      String?         // Optional field for the user's password.
-  email         String?         @unique // Optional unique email address for the user.
-  role          String          @default("user") // Role of the user, defaults to 'user'.
-  createdAt     DateTime        @default(now()) // Timestamp of when the user was created.
-  username      String?         @unique // Optional unique username.
-  DataSourceAddressID DataSourceAddressID[] // One-to-many relation to DataSourceAddressID.
+  userUUID            String                  @unique
+  password            String?
+  email               String?                 @unique
+  createdAt           DateTime                @default(now())
+  username            String?                 @unique
+  role                String                  @default("user")
+  dataSourceAddresses UserAddressInfo[]
 }
 
-// Definition of the DataSourceAddressID model. This model links users to addresses.
-model DataSourceAddressID {
-  id                  Int        @id @default(autoincrement())
-  addressID           String     @unique
+model AddressInfo {
+  addressID           String                  @unique
   street              String
   city                String
   postcode            String
   citycode            String
-  userId              Int //Foreign key
-  // Other database linked 
+  latitude            Float
+  longitude           Float
   AllRatings          AllRatings[]
-  jsonDataGeorisque   jsonDataGeorisque[]
   jsonDataEau         jsonDataEau[]
-
-  // AllRatings AllRatings @relation(fields: [addressID], references: [addressID])
-  user       User       @relation(fields: [userId], references: [id])
+  jsonDataGeorisque   jsonDataGeorisque[]
+  jsonDataParcCarto   jsonDataParcCarto[]
+  jsonDataDPE         jsonDataDPE[]
+  users               UserAddressInfo[]
 }
 
+model UserAddressInfo {
+  userUUID          String
+  addressInfoId     String
+  user              User          @relation(fields: [userUUID], references: [userUUID])
+  addressInfo       AddressInfo   @relation(fields: [addressInfoId], references: [addressID])
+  @@id([userUUID, addressInfoId])
+}
 model jsonDataEau {
-  id              Int @id @default(autoincrement())
-  addressID       Int @unique
-  eauPotable      Json
-
-  // Link to DataSourceAddressID
-  DataSourcesID   Int
-  dataSource      DataSourceAddressID?  @relation(fields: [DataSourcesID], references: [id])
-
+  addressID     String      @unique
+  eauPotable    Json?
+  coursEau      Json?
+  dataSource    AddressInfo @relation(fields: [addressID], references: [addressID])
 }
 
 model jsonDataGeorisque {
-  id                        Int           @id @default(autoincrement())
-  AZIData                   Json
-  CatnatData                Json
-  InstallationsClasseesData Json
-  MVTData                   Json
-  RadonData                 Json
-  RisquesData               Json
-  SISData                   Json
-  TRIData                   Json
-  ZonageSismiqueData        Json
-  // Link to DataSourceAddressID
-  DataSourcesID             Int           //Foreign key
-  dataSource                DataSourceAddressID?  @relation(fields: [DataSourcesID], references: [id])
+  addressID                 String      @unique
+  AZIData                   Json?
+  CatnatData                Json?
+  InstallationsClasseesData Json?
+  MVTData                   Json?
+  RadonData                 Json?
+  RisquesData               Json?
+  SISData                   Json?
+  TRIData                   Json?
+  ZonageSismiqueData        Json?
+  dataSource                AddressInfo @relation(fields: [addressID], references: [addressID])
+}
+
+model jsonDataParcCarto{
+   addressID                String      @unique
+    naturaHabitat           Json?            
+    naturaOiseaux           Json?            
+    rnc                     Json?  
+    rnn                     Json?  
+    znieff1                 Json?      
+    znieff2                 Json?      
+    pn                      Json?  
+    pnr                     Json?  
+    rncf                    Json?    
+  dataSource                AddressInfo @relation(fields: [addressID], references: [addressID])
+}
+
+model jsonDataDPE{
+  addressID                   String      @unique
+  DPEHabitatExistant          Json?
+  DPEHabitatExistantAvant2021 Json?            
+  DPEHabitatNeuf              Json?            
+  DPETertiaire                Json?
+  DPETertiaireAvant2021       Json?
+  
+  dataSource                AddressInfo @relation(fields: [addressID], references: [addressID])
 }
 
 
-// Definition of the AllRatings model. This model stores various ratings for an address.
 model AllRatings {
-  id                        Int            @id @default(autoincrement()) // Unique identifier, auto-increments.
-  addressID                 String         @unique // Unique string to identify the address.
-  // Fields representing different types of data ratings:
-  eauAnalysis               Int
-  AZIData                   Int
-  CatnatData                Int
-  InstallationsClasseesData Int
-  MVTData                   Int
-  RadonData                 Int
-  RisquesData               Int
-  SISData                   Int
-  TRIData                   Int
-  ZonageSismiqueData        Int
-  createdAt                 DateTime       @default(now()) // Timestamp of when the record was created.
-  // Link to DataSourceAddressID
-  DataSourcesID             Int?      //Foreign key
-  dataSource                DataSourceAddressID?    @relation(fields: [DataSourcesID], references: [id])
-
+  addressID                   String       @unique
+  eauPotable                  Int?
+  coursEau                    Int?
+  AZIData                     Int?
+  CatnatData                  Int?
+  InstallationsClasseesData   Int?
+  MVTData                     Int?
+  RadonData                   Int?
+  RisquesData                 Int?
+  SISData                     Int?
+  TRIData                     Int?
+  ZonageSismiqueData          Int?
+  naturaHabitat               Int?
+  naturaOiseaux               Int?        
+  rnc                         Int?               
+  rnn                         Int?               
+  znieff1                     Int?                   
+  znieff2                     Int?                   
+  pn                          Int?             
+  pnr                         Int?               
+  rncf                        Int?
+  DPEHabitatExistant          Int?
+  DPEHabitatExistantAvant2021 Int?
+  DPEHabitatNeuf              Int?               
+  DPETertiaire                Int?
+  DPETertiaireAvant2021       Int?
+  reatedAt                    DateTime     @default(now())
+  dataSource                  AddressInfo? @relation(fields: [addressID], references: [addressID])
 }

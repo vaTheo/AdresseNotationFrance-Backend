@@ -1,18 +1,18 @@
 import axios from 'axios';
 import { findAddress } from './address/findAddress';
-import { getDPE } from './DPE/getDPE';
+import { getDPE } from '../server/datarating/fetch-dpe/getDPE';
 import { dataCalculation, qualiteEau } from './Eau/qualiteEau';
-import { analisysGaspar, callAllApiGasparPromiseAll } from './geoRisque/Georisque';
-import { saveDataToFile } from './function/utilities';
-import { inputAddressObject } from './address/interfaceAddress';
-import { eauAnalysis } from './Eau/eauAnalysis';
+import { analisysGaspar, callAllApiGasparPromiseAll } from '../server/datarating/fetch-georisque/Georisque';
+import { saveDataToFile } from '../server/datarating/utilities';
+import { InputAddressObject } from '../server/datarating/fetch-address/address';
+import { eauAnalysis } from '../server/datarating/fetch-eau/eauAnalysis';
 const BANid = '';
 
 const address = {
   postalCode: '38430',
   City: 'St jean de moirans',
   street: '49 sentier du pressoir',
-} as inputAddressObject;
+} as InputAddressObject;
 
 //  findAddress('38430', '49 sentier du pressoir')
 //  findAddress('59310', '20 Av. de la Libération')

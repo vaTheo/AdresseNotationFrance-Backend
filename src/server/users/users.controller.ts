@@ -11,14 +11,16 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { Roles, RolesGuard } from '../service/roles.guards';
-import { TokenService } from '../service/token.service';
-import { UserService } from '../service/user.service';
+import { Roles, RolesGuard } from '../midleware/roles.guards';
+import { TokenService } from '../datarating/token/token.service';
+import { UserService } from './user.service';
 import { User } from '@prisma/client';
 import { Request, Response, response } from 'express';
-import { CreateUserDto, LoginUserDto, serRoleUserDto } from '@server/users/userDTO';
+import { CreateUserDto, LoginUserDto, serRoleUserDto } from '@server/users/user.dto';
 import { RequestExtendsJWT } from '@server/midleware/JWTValidation';
-import { PrismaCallDBService } from '@server/service/prismaDB.service';
+import { PrismaCallDBService } from '@server/prisma/prismaDB.service';
+import { DBUserAddressInfo } from '@server/DBUserAddressInfo/DBUserAddressInfo.service';
+
 
 @Controller('user')
 @UseGuards(RolesGuard)
@@ -26,8 +28,10 @@ export class UsersController {
   constructor(
     private tokenService: TokenService,
     private userService: UserService,
-    private PrismaCallDBService: PrismaCallDBService,
+    private DBUserAddressInfo: DBUserAddressInfo,
+
   ) {} //Inport the token service so I can use it in the controller
+
 
   @Post('login')
   async loginUser(@Body() data: CreateUserDto, @Res() response: Response) {
@@ -37,7 +41,7 @@ export class UsersController {
     if (!this.userService.verifyPassword(data.password, user.password))
       throw new HttpException('Password incorect ', HttpStatus.UNAUTHORIZED);
 
-    const signedJWT = this.tokenService.createJWT(user.id, user.role);
+    const signedJWT = this.tokenService.createJWT(user.userUUID, user.role);
     // Set authorization header and send response
     response.cookie('authorization', `Bearer ${signedJWT}`, {
       httpOnly: true,
@@ -89,7 +93,7 @@ export class UsersController {
     try {
       let user = await this.userService.findUserByEmail(data.email);
       if (!user) throw new HttpException('User does not exist ', HttpStatus.UNAUTHORIZED);
-      user = await this.userService.updateUserByUUID(user.uuid, undefined, undefined, undefined, data.role);
+      user = await this.userService.updateUserByUUID(user.userUUID, undefined, undefined, undefined, data.role);
       return response
         .status(HttpStatus.OK)
         .send({ success: true, message: `Role successfully changed ${user}` });
@@ -105,7 +109,7 @@ export class UsersController {
   @Get('listaddress')
   @Roles('admin')
   async getListAddressIDsOfUser(@Body() data: any, @Req() request: RequestExtendsJWT) {
-    console.log(await this.PrismaCallDBService.findAddressIDsByID(request?.user.userId));
+    console.log(await this.DBUserAddressInfo.findUsersAddressIDsByID(request?.user.userUUID));
   }
 
   @Delete('delet')

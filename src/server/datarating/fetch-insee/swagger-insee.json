@@ -1,0 +1,266 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "<span style=\"color:black;\"> \n<h4 class=\"add-margin-top-5x\">Les données locales</h4>\n<p>L’API ‘Données locales’ permet d’accéder aux données localisées à la commune, diffusées sur insee.fr dans la rubrique 'chiffres détaillés' (ou ‘chiffres clés’ pour les populations légales), sous forme de cubes prédéfinis.<br>\nLes cubes prédéfinis sont ceux utilisés pour l’élaboration des tableaux et graphiques en ligne, correspondant aux sources suivantes : recensement de la population, état civil, répertoire des entreprises et des établissements, fichier localisé social et fiscal, fichier localisé des rémunérations et de l’emploi salarié et offre d’hébergement touristique.</p>\n\n<p>Les statistiques sont disponibles pour tous les zonages géographiques allant de la commune à la France entière, c’est-à-dire pour les zonages administratifs (communes, arrondissements municipaux, arrondissements, intercommunalités/EPCI, départements, régions et France), ainsi que pour les zonages d’étude (zones d'emploi, aires d'attraction des villes, unités urbaines).</p>\n\n<p>La recherche s’effectue à partir d’une source, d’un croisement de variables et d’un code géographique.</p>\n\n<p>La consultation des résultats du recensement de la population (RP) étant destinée à un large public, la diffusion de certains tableaux est restreinte pour en garantir une interprétation de qualité. Ainsi la même finesse de croisement n’est pas disponible pour toutes les zones géographiques. Le détail des restrictions est précisé dans la documentation du recensement (cf. groupes de diffusion). <br>\nExemple : certains tableaux ne sont élaborés que pour les zones géographiques de plus de 2000 habitants. </p>\n\n<p>Nota Bene : Les bases de données du RP mises à disposition sur insee.fr ne sont pas soumises à ces restrictions, notamment pour permettre un usage expert des données et la reconstitution éventuelle d’information sur des regroupements de communes à façon. </p>",
+    "version": "V0.1",
+    "title": "DonneesLocales"
+  },
+  "schemes": ["https", "http"],
+  "paths": {
+    "/donnees/geo-{croisement}@{jeu_donnees}/{nivgeo}-{codgeo}.{modalite}": {
+        // croisement = AGE15_15_90
+        // jeu de donnees = GEO2023RP2020
+        // nivgeo= 
+        // codgeo = 
+        // modalite= ENS
+      "get": {
+        "summary": "Données pour un niveau géographie",
+        "description": "",
+        "operationId": "getDonnees",
+        "produces": ["application/xml", "application/json;charset=utf-8"],
+        "parameters": [
+          {
+            "name": "jeu_donnees",
+            "in": "path",
+            "description": "Source des données",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "croisement",
+            "in": "path",
+            "description": "Combinaison de variables souhaitées sous la forme var1-var2…",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "modalite",
+            "in": "path",
+            "description": "Modalité de la (ou des) variable(s)",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "nivgeo",
+            "in": "path",
+            "description": "Niveau géographique",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "codgeo",
+            "in": "path",
+            "description": "Code géographique INSEE",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": { "description": "successful operation", "schema": { "$ref": "#/definitions/Donnee" } }
+        },
+        "x-auth-type": "Application & Application User",
+        "x-throttling-tier": "Unlimited"
+      }
+    }
+  },
+  "definitions": {
+    "Cellule": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "integer", "format": "int32" },
+        "modalites": {
+          "type": "array",
+          "xml": { "name": "Modalite" },
+          "items": { "xml": { "name": "Modalite" }, "$ref": "#/definitions/Modalite" }
+        },
+        "mesure": { "$ref": "#/definitions/Mesure" }
+      }
+    },
+    "Croisement": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "integer", "format": "int32" },
+        "filtre": { "type": "string", "xml": { "name": "Filtre" } },
+        "dimensions": { "type": "array", "items": { "type": "string" } },
+        "jeuDonnees": { "xml": { "name": "JeuDonnees" }, "$ref": "#/definitions/JeuDonnees" },
+        "geoGroupe": { "xml": { "name": "Groupe" }, "$ref": "#/definitions/GeoGroupe" }
+      }
+    },
+    "Donnee": {
+      "type": "object",
+      "properties": {
+        "zones": {
+          "type": "array",
+          "xml": { "name": "Zone" },
+          "items": { "xml": { "name": "Zone" }, "$ref": "#/definitions/ZoneEtendue" }
+        },
+        "variables": {
+          "type": "array",
+          "xml": { "name": "Variable" },
+          "items": { "xml": { "name": "Variable" }, "$ref": "#/definitions/Variable" }
+        },
+        "valeurs": {
+          "type": "array",
+          "xml": { "name": "Cellule" },
+          "items": { "xml": { "name": "Cellule" }, "$ref": "#/definitions/Valeur" }
+        },
+        "croisement": { "xml": { "name": "Croisement" }, "$ref": "#/definitions/Croisement" }
+      },
+      "xml": { "name": "Donnees" }
+    },
+    "EvenementGeo": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "integer", "format": "int32" },
+        "nivgeo": { "type": "string" },
+        "codgeo": { "type": "string" },
+        "role": { "type": "string", "xml": { "attribute": true } },
+        "type": { "type": "string", "xml": { "attribute": true } },
+        "libelle": { "type": "string" },
+        "date": { "type": "string", "format": "date-time", "xml": { "attribute": true } }
+      }
+    },
+    "GeoGroupe": {
+      "type": "object",
+      "properties": {
+        "code": { "type": "string", "xml": { "attribute": true } },
+        "libelle": { "type": "string" }
+      }
+    },
+    "JeuDonnees": {
+      "type": "object",
+      "properties": {
+        "code": { "type": "string", "xml": { "attribute": true } },
+        "libelle": { "type": "string", "xml": { "name": "Libelle" } },
+        "annee": { "type": "integer", "format": "int32", "xml": { "name": "Annee" } },
+        "anneeGeo": { "type": "integer", "format": "int32" },
+        "codeSource": { "type": "string" },
+        "libelleSource": { "type": "string", "xml": { "name": "Source" } }
+      }
+    },
+    "Mesure": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "integer", "format": "int32" },
+        "code": { "type": "string", "xml": { "attribute": true } },
+        "libelle": { "type": "string" }
+      },
+      "xml": { "name": "Mesure" }
+    },
+    "Modalite": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "integer", "format": "int32" },
+        "code": { "type": "string", "xml": { "attribute": true } },
+        "libelle": { "type": "string" },
+        "codeVariable": { "type": "string", "xml": { "name": "variable", "attribute": true } },
+        "libelleVariable": { "type": "string" }
+      },
+      "xml": { "name": "Modalite" }
+    },
+    "ModaliteEtendue": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "integer", "format": "int32" },
+        "code": { "type": "string", "xml": { "attribute": true } },
+        "libelle": { "type": "string", "xml": { "name": "Libelle" } },
+        "codeVariable": { "type": "string", "xml": { "name": "variable", "attribute": true } },
+        "libelleVariable": { "type": "string" }
+      },
+      "xml": { "name": "Modalite" }
+    },
+    "Valeur": {
+      "type": "object",
+      "properties": {
+        "valeur": { "type": "number", "format": "double" },
+        "idCellule": { "type": "integer", "format": "int32" },
+        "zone": { "xml": { "name": "Zone" }, "$ref": "#/definitions/Zone" },
+        "cellule": { "$ref": "#/definitions/Cellule" },
+        "mesure": { "xml": { "name": "Mesure" }, "$ref": "#/definitions/Mesure" },
+        "valeurFormatee": { "type": "string", "xml": { "name": "Valeur" } },
+        "modalite": {
+          "type": "array",
+          "xml": { "name": "Modalite" },
+          "items": { "xml": { "name": "Modalite" }, "$ref": "#/definitions/Modalite" }
+        },
+        "annee": { "type": "integer", "format": "int32" },
+        "nivgeo": { "type": "string" },
+        "codgeo": { "type": "string" }
+      }
+    },
+    "Variable": {
+      "type": "object",
+      "properties": {
+        "code": { "type": "string", "xml": { "attribute": true } },
+        "libelle": { "type": "string", "xml": { "name": "Libelle" } },
+        "modalites": {
+          "type": "array",
+          "xml": { "name": "Modalite" },
+          "items": { "xml": { "name": "Modalite" }, "$ref": "#/definitions/ModaliteEtendue" }
+        }
+      },
+      "xml": { "name": "Variable" }
+    },
+    "Zone": {
+      "type": "object",
+      "properties": {
+        "codgeo": { "type": "string", "xml": { "attribute": true } },
+        "nivgeo": { "type": "string", "xml": { "attribute": true } },
+        "evenements": {
+          "type": "array",
+          "xml": { "name": "Evenement" },
+          "items": { "xml": { "name": "Evenement" }, "$ref": "#/definitions/EvenementGeo" }
+        },
+        "zoneMillesimes": { "type": "array", "items": { "$ref": "#/definitions/ZoneMillesime" } },
+        "nivCode": { "type": "string" }
+      }
+    },
+    "ZoneEtendue": {
+      "type": "object",
+      "properties": {
+        "codgeo": { "type": "string", "xml": { "attribute": true } },
+        "nivgeo": { "type": "string", "xml": { "attribute": true } },
+        "evenements": {
+          "type": "array",
+          "xml": { "name": "Evenement" },
+          "items": { "xml": { "name": "Evenement" }, "$ref": "#/definitions/EvenementGeo" }
+        },
+        "zoneMillesimes": {
+          "type": "array",
+          "xml": { "name": "Millesime" },
+          "items": { "xml": { "name": "Millesime" }, "$ref": "#/definitions/ZoneMillesime" }
+        },
+        "nivCode": { "type": "string" }
+      }
+    },
+    "ZoneMillesime": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "integer", "format": "int32" },
+        "annee": { "type": "integer", "format": "int32", "xml": { "attribute": true } },
+        "codgeo": { "type": "string" },
+        "nivgeo": { "type": "string" },
+        "geoGroupes": {
+          "type": "array",
+          "xml": { "name": "Groupe" },
+          "items": { "xml": { "name": "Groupe" }, "$ref": "#/definitions/GeoGroupe" }
+        },
+        "ncc": { "type": "string" },
+        "nccenr": { "type": "string", "xml": { "name": "Nccenr" } },
+        "tncc": { "type": "string", "xml": { "name": "Tncc" } },
+        "libelle": { "type": "string" },
+        "nivCode": { "type": "string" }
+      }
+    }
+  },
+  "securityDefinitions": {
+    "default": {
+      "type": "oauth2",
+      "authorizationUrl": "https://api.insee.fr/authorize",
+      "flow": "implicit",
+      "scopes": {}
+    }
+  },
+  "basePath": "/donnees-locales/V0.1",
+  "host": "api.insee.fr"
+}
